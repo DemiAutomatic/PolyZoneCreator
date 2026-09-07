@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html>
   <head>
-    <title>PolyZone Creator</title>
+    <title>ox_lib Zone Creator</title>
     <meta charset="utf-8" />
     <meta name="viewport" content="initial-scale=1.0, user-scalable=no" />
     <meta name="apple-mobile-web-app-capable" content="yes" />
@@ -19,32 +19,150 @@
         z-index: 1;
         background-color: #143c6a;
       }
-      .btn {
+      .panel {
         position: absolute;
+        top: 10px;
+        right: 10px;
         z-index: 10;
-        border-radius: 3px;
-        padding: 5px 15px;
-        border-color: #202020;
-        background-color: #303030;
+        width: 270px;
+        padding: 12px 14px 14px;
+        border: 1px solid #1a1a1a;
+        border-radius: 6px;
+        background: rgba(24, 24, 24, 0.94);
+        color: #f3f3f3;
+        font-family: "Segoe UI", Tahoma, sans-serif;
+        font-size: 13px;
+        box-shadow: 0 8px 24px rgba(0, 0, 0, 0.35);
+      }
+      .panel h1 {
+        margin: 0 0 4px;
+        font-size: 16px;
+        font-weight: 650;
+      }
+      .panel .sub {
+        margin: 0 0 12px;
+        color: #b0b0b0;
+        font-size: 11px;
+        line-height: 1.35;
+      }
+      .panel label {
+        display: block;
+        margin-bottom: 3px;
+        color: #c8c8c8;
+        font-size: 11px;
+        letter-spacing: 0.02em;
+        text-transform: uppercase;
+      }
+      .panel .field {
+        margin-bottom: 10px;
+      }
+      .panel input,
+      .panel select {
+        width: 100%;
+        box-sizing: border-box;
+        padding: 6px 8px;
+        border: 1px solid #3a3a3a;
+        border-radius: 4px;
+        background: #111;
+        color: #fff;
+        font: inherit;
+      }
+      .panel .row {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 8px;
+      }
+      .panel .check {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        margin: 4px 0 10px;
+        color: #ddd;
+        text-transform: none;
+        letter-spacing: 0;
+        font-size: 13px;
+        cursor: pointer;
+      }
+      .panel .check input {
+        width: auto;
+      }
+      .panel .actions {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 6px;
+      }
+      .btn {
+        border-radius: 4px;
+        padding: 7px 10px;
+        border: 1px solid #202020;
+        background: #303030;
         color: white;
-      }
-      .btn-clear {
-        top: 2px;
-        right: 2px;
-      }
-      .btn-debug {
-        top: 2px;
-        right: 140px;
-      }
-      .btn-overlay {
-        top: 2px;
-        right: 250px;
+        font: inherit;
       }
       .btn:hover {
         cursor: pointer;
+        background: #3a3a3a;
       }
       .btn:active {
-        background-color: #404040;
+        background: #404040;
+      }
+      .btn.on {
+        background: #2d6a2d;
+        border-color: #245524;
+      }
+      .btn-wide {
+        grid-column: 1 / -1;
+      }
+      .toast {
+        position: absolute;
+        left: 50%;
+        bottom: 18px;
+        z-index: 20;
+        transform: translateX(-50%);
+        padding: 8px 14px;
+        border-radius: 4px;
+        background: #1b1b1b;
+        color: #fff;
+        font-family: "Segoe UI", Tahoma, sans-serif;
+        font-size: 13px;
+        opacity: 0;
+        pointer-events: none;
+        transition: opacity 0.2s ease;
+      }
+      .toast.show {
+        opacity: 1;
+      }
+      .zone-popup {
+        min-width: 420px;
+        max-width: 640px;
+      }
+      .zone-popup-bar {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 8px;
+        margin-bottom: 8px;
+      }
+      .zone-popup-bar strong {
+        font-family: "Segoe UI", Tahoma, sans-serif;
+        font-size: 13px;
+      }
+      .zone-lua {
+        margin: 0;
+        max-height: 320px;
+        overflow: auto;
+        white-space: pre-wrap;
+        font-family: Consolas, "Courier New", monospace;
+        font-size: 12px;
+        line-height: 1.4;
+      }
+      .copy-lua {
+        padding: 4px 10px;
+        border: 1px solid #202020;
+        border-radius: 3px;
+        background: #303030;
+        color: #fff;
+        cursor: pointer;
       }
       .leaflet-grid-label .lng {
         margin-left: 8px;
@@ -56,28 +174,49 @@
   <body>
     <div id="map1"></div>
 
-    <button class="btn btn-clear" onclick="clearLayer();">
-      Clear All Shapes
-    </button>
+    <aside class="panel">
+      <h1>ox_lib Zone Creator</h1>
+      <p class="sub">
+        Polygon → poly &nbsp;·&nbsp; Rectangle → box &nbsp;·&nbsp; Circle → sphere
+      </p>
 
-    <button
-      class="btn btn-debug"
-      onclick="debug = !debug;this.style.backgroundColor = debug ? '#40aa40' : '#303030';"
-    >
-      Debug Grid
-    </button>
+      <div class="field">
+        <label for="exportFormat">Export format</label>
+        <select id="exportFormat" onchange="onExportOptionsChanged()">
+          <option value="function">Function (lib.zones)</option>
+          <option value="array">Array</option>
+          <option value="target">ox_target</option>
+        </select>
+      </div>
 
-    <button
-      class="btn btn-overlay"
-      onclick="overlay = !overlay;this.style.backgroundColor = overlay ? '#40aa40' : '#303030';setOverlay();"
-    >
-      Overlay Grid
-    </button>
+      <div class="row">
+        <div class="field">
+          <label for="zoneZ">Z</label>
+          <input id="zoneZ" type="number" step="0.1" value="30" onchange="onExportOptionsChanged()" />
+        </div>
+        <div class="field">
+          <label for="zoneThickness">Thickness / height</label>
+          <input id="zoneThickness" type="number" step="0.1" min="0.1" value="4" onchange="onExportOptionsChanged()" />
+        </div>
+      </div>
+
+      <label class="check">
+        <input id="zoneDebug" type="checkbox" onchange="onExportOptionsChanged()" />
+        Export debug = true
+      </label>
+
+      <div class="actions">
+        <button class="btn" id="btnOverlay" onclick="toggleOverlay()">Overlay Grid</button>
+        <button class="btn" onclick="copyAllZones()">Copy All Lua</button>
+        <button class="btn btn-wide" onclick="clearLayer()">Clear All</button>
+      </div>
+    </aside>
+
+    <div class="toast" id="toast"></div>
 
     <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/leaflet.js" integrity="sha512-XQoYMqMTK8LvdxXYG3nZ448hOEQiglfqkJs1NOQV44cWnUrBc8PkAOcXy20w0vlaXaVUearIOBhiXZ5V3ynxwA==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet.draw/1.0.4/leaflet.draw.js" integrity="sha512-ozq8xQKq6urvuU6jNgkfqAmT7jKN2XumbrX1JiB3TnF7tI48DPI4Gy1GXKD/V3EExgAs1V+pRO7vwtS1LHg0Gw==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
     <script>
-      //Map Options
       var mapMinZoom = 0;
       var mapMaxZoom = 7;
       var mapMaxResolution = 0.25;
@@ -85,11 +224,28 @@
       var mapCenterLat = -5525;
       var mapCenterLng = 3755;
       var gtaOffset = 0.66;
-      var debug = false;
       var overlay = false;
       var bottomLeft = [-8192, 0];
       var topRight = [0, 8192];
       var bounds = [bottomLeft, topRight];
+
+      function latlngToGTA(latlng) {
+        var x = (latlng.lng - mapCenterLng) / gtaOffset;
+        var y = (latlng.lat - mapCenterLat) / gtaOffset;
+        return [x, y];
+      }
+
+      function gtaToLatLng(x, y) {
+        var lng = x * gtaOffset + mapCenterLng;
+        var lat = y * gtaOffset + mapCenterLat;
+        return L.latLng(lat, lng);
+      }
+
+      function gtaDistance(a, b) {
+        var pa = latlngToGTA(a);
+        var pb = latlngToGTA(b);
+        return Math.hypot(pa[0] - pb[0], pa[1] - pb[1]);
+      }
 
       L.Draw.Circle = L.Draw.SimpleShape.extend({
         statics: {
@@ -103,35 +259,25 @@
             weight: 4,
             opacity: 0.5,
             fill: true,
-            fillColor: null, //same as color by default
+            fillColor: null,
             fillOpacity: 0.2,
             clickable: true,
           },
           showRadius: true,
-          metric: true, // Whether to use the metric measurement system or imperial
-          feet: true, // When not metric, use feet instead of yards for display
-          nautic: false, // When not metric, not feet use nautic mile for display
+          metric: true,
+          feet: true,
+          nautic: false,
         },
 
-        // @method initialize(): void
         initialize: function (map, options) {
-          // Save the type so super can fire, need to do this as cannot do this.TYPE :(
           this.type = L.Draw.Circle.TYPE;
-
           this._initialLabelText =
             L.drawLocal.draw.handlers.circle.tooltip.start;
-
           L.Draw.SimpleShape.prototype.initialize.call(this, map, options);
         },
 
         _drawShape: function (latlng) {
-          // Calculate the distance based on the version
-          let outerPos = latlngToGTA(latlng);
-          let innerPos = latlngToGTA(this._startLatLng);
-          var distance = Math.hypot(
-            innerPos[0] - outerPos[0],
-            innerPos[1] - outerPos[1]
-          );
+          var distance = gtaDistance(latlng, this._startLatLng) * gtaOffset;
 
           if (!this._shape) {
             this._shape = new L.Circle(
@@ -155,98 +301,57 @@
         },
 
         _onMouseMove: function (e) {
-          var latlng = e.latlng,
-            showRadius = this.options.showRadius,
-            useMetric = this.options.metric,
-            radius;
-
+          var latlng = e.latlng;
           this._tooltip.updatePosition(latlng);
           if (this._isDrawing) {
             this._drawShape(latlng);
-
-            // Get the new radius (rounded to 1 dp)
-            radius = this._shape.getRadius().toFixed(1);
-
-            var subtext = "";
-            if (showRadius) {
-              subtext =
-                L.drawLocal.draw.handlers.circle.radius +
-                ": " +
-                L.GeometryUtil.readableDistance(
-                  radius,
-                  useMetric,
-                  this.options.feet,
-                  this.options.nautic
-                );
-            }
+            var radius = (this._shape.getRadius() / gtaOffset).toFixed(1);
             this._tooltip.updateContent({
               text: this._endLabelText,
-              subtext: subtext,
+              subtext: this.options.showRadius
+                ? L.drawLocal.draw.handlers.circle.radius + ": " + radius + "m"
+                : "",
             });
           }
         },
       });
 
-      L.Edit.CircleMarker = L.Edit.Circle.extend({
+      L.Edit.Circle.prototype._resize = function (latlng) {
+        var moveLatLng = this._moveMarker.getLatLng();
+        var distance = gtaDistance(latlng, moveLatLng);
+        var mapRadius = distance * gtaOffset;
 
-        _resize: function (latlng) {
-          var moveLatLng = this._moveMarker.getLatLng();
+        if (this._map._editTooltip) {
+          this._map._editTooltip.updateContent({
+            text:
+              L.drawLocal.edit.handlers.edit.tooltip.subtext +
+              "<br />" +
+              L.drawLocal.edit.handlers.edit.tooltip.text,
+            subtext:
+              L.drawLocal.draw.handlers.circle.radius +
+              ": " +
+              distance.toFixed(1) +
+              "m",
+          });
+        }
 
-          // Calculate the distance based on the version
-          let outerPos = latlngToGTA(latlng);
-          let innerPos = latlngToGTA(this._startLatLng);
-          var distance = Math.hypot(
-            innerPos[0] - outerPos[0],
-            innerPos[1] - outerPos[1]
-          );
+        this._shape.setRadius(mapRadius);
+        this._map.fire(L.Draw.Event.EDITRESIZE, { layer: this._shape });
+      };
 
-          if (this._map.editTooltip) {
-            this._map._editTooltip.updateContent({
-              text:
-                L.drawLocal.edit.handlers.edit.tooltip.subtext +
-                "<br />" +
-                L.drawLocal.edit.handlers.edit.tooltip.text,
-              subtext:
-                L.drawLocal.draw.handlers.circle.radius +
-                ": " +
-                L.GeometryUtil.readableDistance(
-                  distance,
-                  true,
-                  this.options.feet,
-                  this.options.nautic
-                ),
-            });
-          }
-
-          this._shape.setRadius(distance);
-
-          this._map.fire(L.Draw.Event.EDITRESIZE, { layer: this._shape });
-        },
-      });
-
-      //Create a new (square) coordinate system
       var crs = L.CRS.Simple;
-
       crs.scale = function (zoom) {
         return Math.pow(2, zoom) / mapMinResolution;
       };
-      /*
-      crs.zoom = function (scale) {
-        return Math.log(scale * mapMinResolution) / Math.LN2;
-      };*/
-
-      //Create GTA map tiles
 
       var layer = L.tileLayer("tiles/{z}/{x}/{y}.png", {
         minZoom: mapMinZoom,
         maxZoom: mapMaxZoom,
         attribution:
-          'Rendered with <a href="https://www.maptiler.com/desktop/">MapTiler Desktop</a> by <a href="https://github.com/RussianRonin">RussianRonin</a> | Created by <a href="https://github.com/skyrossm">Skyrossm</a>',
+          'Rendered with <a href="https://www.maptiler.com/desktop/">MapTiler Desktop</a> by <a href="https://github.com/RussianRonin">RussianRonin</a> | Original by <a href="https://github.com/skyrossm">Skyrossm</a> | ox_lib port by <a href="https://github.com/DemiAutomatic">DemiAutomatic</a>',
         noWrap: true,
         tms: true,
       });
-
-      //Create the map object
 
       var map = new L.Map("map1", {
         maxZoom: mapMaxZoom,
@@ -257,18 +362,21 @@
         zoom: 3,
       });
 
-      //Shows GTA grid overlay on map
-      let bgimage = L.imageOverlay("https://i.imgur.com/MQr04nZ.jpg", bounds, {
+      L.imageOverlay("https://i.imgur.com/MQr04nZ.jpg", bounds, {
         opacity: 0,
       }).addTo(map);
+
       function setOverlay() {
-        let imagelee = document.querySelector(".leaflet-image-layer");
-        imagelee.style.opacity = overlay ? 0.5 : 0;
+        var imagelee = document.querySelector(".leaflet-image-layer");
+        if (imagelee) imagelee.style.opacity = overlay ? 0.5 : 0;
       }
 
-      //Create Leaflet.Draw toolbar/layer
+      function toggleOverlay() {
+        overlay = !overlay;
+        document.getElementById("btnOverlay").classList.toggle("on", overlay);
+        setOverlay();
+      }
 
-      //Fix for broken Draw
       L.Draw.Polyline.prototype._onTouch = L.Util.falseFn;
 
       var editableLayers = L.featureGroup();
@@ -284,152 +392,327 @@
       });
       map.addControl(drawControl);
 
-      //Convert latlng on the map to GTA coords
-      function latlngToGTA(latlng) {
-        var x = (latlng.lng - mapCenterLng) / gtaOffset;
-        var y = (latlng.lat - mapCenterLat) / gtaOffset;
-        return [x.toFixed(2), y.toFixed(2)];
+      function fmt(n) {
+        return Number(n).toFixed(2);
       }
 
-      //Convert GTA coords to latlng on the map
-      function gtaToLatLng(x, y) {
-        var lng = x * gtaOffset + mapCenterLng;
-        var lat = y * gtaOffset + mapCenterLat;
-        return L.latLng(lat, lng);
+      function luaIdent(name) {
+        var ident = String(name || "zone").replace(/[^A-Za-z0-9_]/g, "_");
+        if (!/^[A-Za-z_]/.test(ident)) ident = "zone_" + ident;
+        return ident;
       }
 
-      //Remove all shapes from Draw
-      function clearLayer() {
-        editableLayers.getLayers().forEach((layer) => {
-          editableLayers.removeLayer(layer);
+      function luaString(value) {
+        return String(value || "")
+          .replace(/\\/g, "\\\\")
+          .replace(/"/g, '\\"');
+      }
+
+      function escapeHtml(value) {
+        return String(value)
+          .replace(/&/g, "&amp;")
+          .replace(/</g, "&lt;")
+          .replace(/>/g, "&gt;");
+      }
+
+      function getExportOptions() {
+        var z = parseFloat(document.getElementById("zoneZ").value);
+        var thickness = parseFloat(
+          document.getElementById("zoneThickness").value
+        );
+        return {
+          format: document.getElementById("exportFormat").value,
+          z: Number.isFinite(z) ? z : 30,
+          thickness: Number.isFinite(thickness) && thickness > 0 ? thickness : 4,
+          debug: document.getElementById("zoneDebug").checked,
+        };
+      }
+
+      function debugLine(opts, indent) {
+        return opts.debug ? indent + "debug = true,\n" : "";
+      }
+
+      function vec3(x, y, z) {
+        return "vec3(" + fmt(x) + ", " + fmt(y) + ", " + fmt(z) + ")";
+      }
+
+      function parsePoly(name, points, opts) {
+        var ident = luaIdent(name);
+        var pointLines = points
+          .map(function (point) {
+            return "\t\t" + vec3(point[0], point[1], opts.z) + ",";
+          })
+          .join("\n");
+        var body =
+          '\tname = "' +
+          luaString(name) +
+          '",\n' +
+          "\tpoints = {\n" +
+          pointLines +
+          "\n\t},\n" +
+          "\tthickness = " +
+          fmt(opts.thickness) +
+          ",\n" +
+          debugLine(opts, "\t");
+
+        if (opts.format === "array") {
+          return "{\n" + body + "},";
+        }
+        if (opts.format === "target") {
+          return "exports.ox_target:addPolyZone({\n" + body + "})";
+        }
+        return "local " + ident + " = lib.zones.poly({\n" + body + "})";
+      }
+
+      function parseBox(name, box, opts) {
+        var ident = luaIdent(name);
+        var body =
+          '\tname = "' +
+          luaString(name) +
+          '",\n' +
+          "\tcoords = " +
+          vec3(box.x, box.y, opts.z) +
+          ",\n" +
+          "\tsize = " +
+          vec3(box.width, box.length, opts.thickness) +
+          ",\n" +
+          "\trotation = " +
+          fmt(box.rotation || 0) +
+          ",\n" +
+          debugLine(opts, "\t");
+
+        if (opts.format === "array") {
+          return "{\n" + body + "},";
+        }
+        if (opts.format === "target") {
+          return "exports.ox_target:addBoxZone({\n" + body + "})";
+        }
+        return "local " + ident + " = lib.zones.box({\n" + body + "})";
+      }
+
+      function parseSphere(name, center, radius, opts) {
+        var ident = luaIdent(name);
+        var body =
+          '\tname = "' +
+          luaString(name) +
+          '",\n' +
+          "\tcoords = " +
+          vec3(center[0], center[1], opts.z) +
+          ",\n" +
+          "\tradius = " +
+          fmt(radius) +
+          ",\n" +
+          debugLine(opts, "\t");
+
+        if (opts.format === "array") {
+          return "{\n" + body + "},";
+        }
+        if (opts.format === "target") {
+          return "exports.ox_target:addSphereZone({\n" + body + "})";
+        }
+        return "local " + ident + " = lib.zones.sphere({\n" + body + "})";
+      }
+
+      function rectangleToBox(layer) {
+        var rings = layer.getLatLngs();
+        var corners = Array.isArray(rings[0]) ? rings[0] : rings;
+        var xs = [];
+        var ys = [];
+        corners.forEach(function (latlng) {
+          var point = latlngToGTA(latlng);
+          xs.push(point[0]);
+          ys.push(point[1]);
         });
+        var minX = Math.min.apply(null, xs);
+        var maxX = Math.max.apply(null, xs);
+        var minY = Math.min.apply(null, ys);
+        var maxY = Math.max.apply(null, ys);
+        return {
+          x: (minX + maxX) / 2,
+          y: (minY + maxY) / 2,
+          width: Math.abs(maxX - minX),
+          length: Math.abs(maxY - minY),
+          rotation: 0,
+        };
       }
 
-      //https://github.com/mkafrin/PolyZone/blob/master/server.lua
-      function parseShape(name, points) {
-        var printout = "--Name: " + name + " | " + new Date().toDateString();
-        printout += "\nPolyZone:Create({\n";
-        points.forEach((point, index) => {
-          var last = index < points.length - 1 ? "," : "";
-          printout +=
-            " vector2(" + point[0] + ", " + point[1] + ")" + last + "\n";
-        });
-        var debugText = debug ? "\n debugGrid=true," : "";
-        printout +=
-          '}, {\n name="' +
-          name +
-          '",' +
-          debugText +
-          "\n --minZ=0,\n --maxZ=800\n})\n\n";
-        return printout;
+      function polygonPoints(layer) {
+        var rings = layer.getLatLngs();
+        var corners = Array.isArray(rings[0]) ? rings[0] : rings;
+        return corners.map(latlngToGTA);
       }
 
-      //https://github.com/mkafrin/PolyZone/blob/master/server.lua
-      function parseCircle(name, center, radius) {
-        var printout = "--Name: " + name + " | " + new Date().toDateString();
-        printout +=
-          "\nCircleZone:Create(vector2(" +
-          center[0] +
-          ", " +
-          center[1] +
-          "), " +
-          radius +
-          ", ";
-        var debugText = debug ? "\n debugPoly=true," : "";
-        printout += '{\n name="' + name + '",' + debugText + "\n})\n\n";
-        return printout;
+      function zoneKindFromLayer(layer, layerType) {
+        if (layerType === "circle" || layer instanceof L.Circle) return "sphere";
+        if (layerType === "rectangle" || layer instanceof L.Rectangle) return "box";
+        if (layerType === "marker" || layer instanceof L.Marker) return "marker";
+        return "poly";
       }
 
-      //On shape created
-      map.on(L.Draw.Event.CREATED, (e) => {
-        var type = e.layerType,
-          layer = e.layer;
+      function getLayerLua(layer) {
+        var opts = getExportOptions();
+        var meta = layer._zone || {};
+        var name = meta.name || "zone";
+        var kind = meta.kind || zoneKindFromLayer(layer);
 
-        //If it's a marker just show the GTA position
-        if (type === "marker") {
-          var position = latlngToGTA(layer.getLatLng());
-          layer.bindPopup(
-            "GTA Position: " + position + ", latlng: " + layer.getLatLng()
-          );
-        } else if (type === "circle") {
-          var position = latlngToGTA(layer.getLatLng());
-
-          let content = parseCircle(
-            prompt("Enter circlezone name: "),
+        if (kind === "marker") {
+          var pos = latlngToGTA(layer.getLatLng());
+          return vec3(pos[0], pos[1], opts.z);
+        }
+        if (kind === "sphere") {
+          return parseSphere(
+            name,
             latlngToGTA(layer.getLatLng()),
-            (layer.getRadius() * 1.5).toFixed(2)
-          );
-          layer.bindPopup(
-            "<code style='white-space:pre-wrap;'>" + content + "</code>",
-            { minWidth: 500 }
-          );
-        } else {
-          //Get the polyzone name
-          var name = prompt("Enter polyzone name:");
-          //Show polyzone code on popup
-          var gtapoints = [];
-          layer._latlngs[0].forEach((latlng) => {
-            gtapoints.push(latlngToGTA(latlng));
-          });
-
-          var content = parseShape(name, gtapoints);
-          //Show in console as well just in case
-          console.log(content);
-
-          //Bind the popup
-          layer.bindPopup(
-            "<code style='white-space:pre-wrap;'>" + content + "</code>",
-            { minWidth: 500 }
+            layer.getRadius() / gtaOffset,
+            opts
           );
         }
+        if (kind === "box") {
+          return parseBox(name, rectangleToBox(layer), opts);
+        }
+        return parsePoly(name, polygonPoints(layer), opts);
+      }
 
-        //Add shape to map
+      function popupTitle(kind, format) {
+        if (kind === "marker") return "vec3";
+        if (format === "target") {
+          if (kind === "sphere") return "ox_target:addSphereZone";
+          if (kind === "box") return "ox_target:addBoxZone";
+          return "ox_target:addPolyZone";
+        }
+        if (kind === "sphere") return "lib.zones.sphere";
+        if (kind === "box") return "lib.zones.box";
+        return "lib.zones.poly";
+      }
+
+      function bindZonePopup(layer) {
+        var lua = getLayerLua(layer);
+        layer._lua = lua;
+        var kind = (layer._zone && layer._zone.kind) || "poly";
+        var format = getExportOptions().format;
+        var html =
+          '<div class="zone-popup">' +
+          '<div class="zone-popup-bar">' +
+          "<strong>" +
+          escapeHtml(popupTitle(kind, format)) +
+          "</strong>" +
+          '<button type="button" class="copy-lua">Copy</button>' +
+          "</div>" +
+          '<pre class="zone-lua">' +
+          escapeHtml(lua) +
+          "</pre>" +
+          "</div>";
+        layer.bindPopup(html, { minWidth: 460, maxWidth: 680 });
+      }
+
+      function showToast(message) {
+        var toast = document.getElementById("toast");
+        toast.textContent = message;
+        toast.classList.add("show");
+        clearTimeout(showToast._timer);
+        showToast._timer = setTimeout(function () {
+          toast.classList.remove("show");
+        }, 1600);
+      }
+
+      function copyText(text) {
+        if (!text) {
+          showToast("Nothing to copy");
+          return;
+        }
+        if (navigator.clipboard && navigator.clipboard.writeText) {
+          navigator.clipboard.writeText(text).then(
+            function () {
+              showToast("Copied Lua");
+            },
+            function () {
+              fallbackCopy(text);
+            }
+          );
+        } else {
+          fallbackCopy(text);
+        }
+      }
+
+      function fallbackCopy(text) {
+        var area = document.createElement("textarea");
+        area.value = text;
+        document.body.appendChild(area);
+        area.select();
+        document.execCommand("copy");
+        document.body.removeChild(area);
+        showToast("Copied Lua");
+      }
+
+      function clearLayer() {
+        editableLayers.getLayers().forEach(function (drawn) {
+          editableLayers.removeLayer(drawn);
+        });
+      }
+
+      function copyAllZones() {
+        var chunks = [];
+        editableLayers.eachLayer(function (drawn) {
+          if (drawn._zone) chunks.push(getLayerLua(drawn));
+        });
+        copyText(chunks.join("\n\n"));
+      }
+
+      function onExportOptionsChanged() {
+        editableLayers.eachLayer(function (drawn) {
+          if (drawn._zone) bindZonePopup(drawn);
+        });
+      }
+
+      function promptName(kind) {
+        var labels = {
+          poly: "Enter poly zone name:",
+          box: "Enter box zone name:",
+          sphere: "Enter sphere zone name:",
+        };
+        var name = prompt(labels[kind] || "Enter zone name:", "");
+        if (name === null) return "zone";
+        name = name.trim();
+        return name || "zone";
+      }
+
+      map.on(L.Draw.Event.CREATED, function (e) {
+        var layer = e.layer;
+        var kind = zoneKindFromLayer(layer, e.layerType);
+
+        if (kind === "marker") {
+          layer._zone = { kind: "marker", name: "coords" };
+          bindZonePopup(layer);
+        } else {
+          layer._zone = { kind: kind, name: promptName(kind) };
+          bindZonePopup(layer);
+          console.log(layer._lua);
+        }
+
         editableLayers.addLayer(layer);
       });
 
-      map.on(L.Draw.Event.EDITED, (e) => {
-        var layers = e.layers;
-
-        layers.eachLayer(function (layer) {
-          if (layer instanceof L.Marker) {
-            var position = latlngToGTA(layer.getLatLng());
-            layer.bindPopup(
-              "GTA Position: " + position + ", latlng: " + layer.getLatLng()
-            );
-          } else if (layer instanceof L.Circle) {
-            var name = layer.getPopup().getContent().split(" |")[0].slice(44);
-
-            var position = latlngToGTA(layer.getLatLng());
-            let content = parseCircle(
-              name,
-              latlngToGTA(layer.getLatLng()),
-              (layer.getRadius() * 1.5).toFixed(2)
-            );
-            layer.bindPopup(
-              "<code style='white-space:pre-wrap;'>" + content + "</code>",
-              { minWidth: 500 }
-            );
-          } else {
-            //Get the polyzone name
-            //extracts from the previous popup, could use some love
-            var name = layer.getPopup().getContent().split(" |")[0].slice(44);
-            //Show polyzone code on popup
-            var gtapoints = [];
-            layer._latlngs[0].forEach((latlng) => {
-              gtapoints.push(latlngToGTA(latlng));
-            });
-            var content = parseShape(name, gtapoints);
-            //Bind the popup
-            layer.bindPopup(
-              "<code style='white-space:pre-wrap;'>" + content + "</code>",
-              { minWidth: 500 }
-            );
+      map.on(L.Draw.Event.EDITED, function (e) {
+        e.layers.eachLayer(function (drawn) {
+          if (!drawn._zone) {
+            drawn._zone = {
+              kind: zoneKindFromLayer(drawn),
+              name: "zone",
+            };
           }
+          bindZonePopup(drawn);
         });
       });
 
-      //Center the map
-      //map.setView(xy(0, 0), 3);
+      map.on("popupopen", function (e) {
+        var popupEl = e.popup.getElement();
+        if (!popupEl) return;
+        var button = popupEl.querySelector(".copy-lua");
+        if (!button) return;
+        button.onclick = function () {
+          copyText(e.popup._source && e.popup._source._lua);
+        };
+      });
     </script>
   </body>
 </html>
